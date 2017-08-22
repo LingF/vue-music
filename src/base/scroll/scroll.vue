@@ -44,6 +44,13 @@
       },
       refresh() {
         this.scroll && this.scroll.refresh()
+      },
+      scrollTo() {
+        // 会传入参数，所以用apply
+        this.scroll && this.scroll.scrollTo.apply(this.scroll, arguments)
+      },
+      scrollToElement() {
+        this.scroll && this.scroll.scrollToElement.apply(this.scroll, arguments)
       }
     },
     watch: {
