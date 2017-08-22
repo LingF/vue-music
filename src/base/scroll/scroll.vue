@@ -21,6 +21,11 @@
       data: {
         type: Array,
         default: null
+      },
+      // 是否监听滚动事件
+      listenScroll: {
+        type: Boolean,
+        default: false
       }
     },
     mounted() {
@@ -35,6 +40,14 @@
           probeType: this.probeType,
           click: this.click
         })
+
+        if (this.listenScroll) {
+          // scroll 内 this 指向 scroll
+          let me = this
+          this.scroll.on('scroll', (pos) => {
+            me.$emit('scroll', pos)
+          })
+        }
       },
       enable() {
         this.scroll && this.scroll.enable()

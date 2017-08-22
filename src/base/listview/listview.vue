@@ -1,5 +1,9 @@
 <template>
-  <scroll class="listview" :data="data" ref="listview">
+  <scroll class="listview" ref="listview"
+    :data="data"
+    :listenScroll="listenScroll"
+    :probeType="probeType"
+    @scroll="scroll">
     <ul>
       <li v-for="group in data" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
@@ -17,7 +21,8 @@
       @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
         <li v-for="(item, index) in shortcutList" class="item"
-          :data-index="index">
+          :data-index="index"
+          :class="{'current': currentIndex == index}">
           {{item}}
         </li>
       </ul>
@@ -28,6 +33,7 @@
 <script>
   import Scroll from 'base/scroll/scroll'
   import {getData} from 'common/js/dom'
+  import {BROWSER_TIME} from 'base/config'
 
   // 样式高度
   const ANCHOR_HEIGHT = 18
@@ -42,9 +48,18 @@
     components: {
       Scroll
     },
+    data() {
+      return {
+        scrollY: -1,
+        currentIndex: 0
+      }
+    },
     created() {
       // 不需观测的数据
       this.touch = {}
+      this.listenScroll = true
+      this.listHeight = []
+      this.probeType = 3
     },
     computed: {
       shortcutList() {
@@ -70,8 +85,53 @@
         let anchorIndex = parseInt(this.touch.anchorIndex) + delta
         this._scrollTo(anchorIndex)
       },
+      // 观测的 scroll 事件
+      scroll(pos) {
+        this.scrollY = pos.y
+      },
       _scrollTo(index) {
         this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
+      },
+      _calculateHeight() {
+        this.listHeight = []
+        const list = this.$refs.listGroup
+        let height = 0
+        this.listHeight.push(height)
+        for (let i = 0; i < list.length; i++) {
+          let item = list[i]
+          height += item.clientHeight
+          this.listHeight.push(height)
+        }
+      }
+    },
+    watch: {
+      // 数据变化时计算高度
+      data() {
+        setTimeout(() => {
+          this._calculateHeight()
+        }, BROWSER_TIME)
+      },
+      scrollY(newY) {
+        const listHeight = this.listHeight
+        // 当滚动到顶部 newY > 0
+        if (newY > 0) {
+          this.currentIndex = 0
+          return
+        }
+        // 在中间部分滚动
+        // 会比列表元素多一个
+        // 上限 下限
+        for (let i = 0; i < listHeight.length - 1; i++) {
+          let _height = listHeight[i]
+          let height_ = listHeight[i + 1]
+          if (!height_ || (-newY >= _height) && (-newY < height_)) {
+            this.currentIndex = i
+            return
+          }
+        }
+        // 当滚动到底部，且-newY大于最后一个元素的上限
+        // 多一个元素，所以要多-1
+        this.currentIndex = listHeight.length - 2
       }
     }
   }
