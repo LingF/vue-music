@@ -16,6 +16,10 @@
         </ul>
       </li>
     </ul>
+    <!-- 联动的思路：
+      1. 实时知道滚动位置
+      2. 根据滚动位置得到在哪个group区间
+      3. 得到右侧对应区间索引 -->
     <div class="list-shortcut"
       @touchstart="onShortcutTouchStart"
       @touchmove.stop.prevent="onShortcutTouchMove">
@@ -27,16 +31,25 @@
         </li>
       </ul>
     </div>
+    <div class="list-fixed" v-show="fixedTitle" ref="fixed">
+      <h1 class="fixed-title">{{fixedTitle}}</h1>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <loading></loading>
+    </div>
   </scroll>
 </template>
 
 <script>
   import Scroll from 'base/scroll/scroll'
+  import Loading from 'base/loading/loading'
   import {getData} from 'common/js/dom'
   import {BROWSER_TIME} from 'base/config'
 
   // 样式高度
   const ANCHOR_HEIGHT = 18
+  // title 高度
+  const TITLE_HEIGHT = 30
 
   export default {
     props: {
@@ -46,12 +59,14 @@
       }
     },
     components: {
-      Scroll
+      Scroll,
+      Loading
     },
     data() {
       return {
         scrollY: -1,
-        currentIndex: 0
+        currentIndex: 0,
+        diff: -1 // 滚动的区块上限 - scrollY < title 的高度，则往上顶
       }
     },
     created() {
@@ -66,6 +81,10 @@
         return this.data.map((group) => {
           return group.title.substr(0, 1)
         })
+      },
+      fixedTitle() {
+        if (this.scrollY > 0) return
+        return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
       }
     },
     methods: {
@@ -90,6 +109,16 @@
         this.scrollY = pos.y
       },
       _scrollTo(index) {
+        // 点击上下边缘区域
+        if (!index && index !== 0) return
+        // 拖动边界条件的处理 底部 顶部
+        if (index < 0) {
+          index = 0
+        } else if (index > this.listHeight.length - 2) {
+          index = this.listHeight.length - 2
+        }
+        // 上限位置
+        this.scrollY = -this.listHeight[index]
         this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
       },
       _calculateHeight() {
@@ -124,14 +153,25 @@
         for (let i = 0; i < listHeight.length - 1; i++) {
           let _height = listHeight[i]
           let height_ = listHeight[i + 1]
-          if (!height_ || (-newY >= _height) && (-newY < height_)) {
+          // !height_
+          if (-newY >= _height && -newY < height_) {
             this.currentIndex = i
+            // 实时变化
+            this.diff = height_ + newY // newY 负值
             return
           }
         }
         // 当滚动到底部，且-newY大于最后一个元素的上限
         // 多一个元素，所以要多-1
         this.currentIndex = listHeight.length - 2
+      },
+      diff(newVal) {
+        let fixedTop = (newVal > 0 && this.diff < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+        // 区块内滑动，不用修改
+        // 跨区快时需要动画
+        if (this.fixedTop === fixedTop) return
+        this.fixedTop = fixedTop
+        this.$refs.fixed.style.transform = `translate3d(0, ${fixedTop}px, 0)`
       }
     }
   }
