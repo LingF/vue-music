@@ -12,6 +12,8 @@
   import {ERR_OK} from 'api/config'
   import Singer from 'common/js/singer'
   import ListView from 'base/listview/listview'
+  // 1.mapMutations：vuex 语法糖，对 mutations 做了一层封装
+  import {mapMutations} from 'vuex'
 
   const HOT_NAME = '热门数据'
   // 前十条为热门
@@ -34,6 +36,9 @@
         this.$router.push({
           path: `/singer/${singer.id}`
         })
+        // 3. 调用，把数据传入，实现了对 mutations 的提交
+        // 代替 this.$store.commit('xxx')，更简化
+        this.setSinger(singer)
       },
       _getSingerList() {
         getSingerList().then((res) => {
@@ -85,7 +90,13 @@
           return a.title.charCodeAt(0) - b.title.charCodeAt(0)
         })
         return [...hot, ...ret]
-      }
+      },
+      // 2. 扩展运算符方式，调 mapMutations
+      // 做对象映射
+      // mutations 的修改 映射成一个方法名：setSinger (type常量)
+      ...mapMutations({
+        setSinger: 'SET_SINGER'
+      })
     }
   }
 </script>

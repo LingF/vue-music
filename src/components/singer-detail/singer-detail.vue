@@ -3,8 +3,20 @@
 </template>
 
 <script>
-  export default {
+  // 取数据也提供语法糖
+  import {mapGetters} from 'vuex'
 
+  export default {
+    // getters 最终映射的 computed
+    computed: {
+      // 等于挂载了一个 singer 属性
+      ...mapGetters([
+        'singer'
+      ])
+    },
+    created() {
+      console.log(this.singer)
+    }
   }
 </script>
 
