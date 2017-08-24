@@ -5,6 +5,8 @@
 <script>
   // 取数据也提供语法糖
   import {mapGetters} from 'vuex'
+  import {getSingerDetail} from 'api/singer'
+  import {ERR_OK} from 'api/config'
 
   export default {
     // getters 最终映射的 computed
@@ -16,6 +18,22 @@
     },
     created() {
       console.log(this.singer)
+      // 当前子路由刷新是拿不到数据的
+      // 因为我们通过 vuex set singer
+      // 而 singer 是在列表页点击后去设置的（SET_SINGER）
+      if (!this.singer.id) {
+        this.$router.push('/singer')
+      }
+      this._getDetail()
+    },
+    methods: {
+      _getDetail() {
+        getSingerDetail(this.singer.id).then((res) => {
+          if (res.code === ERR_OK) {
+            console.log(res.data.list)
+          }
+        })
+      }
     }
   }
 </script>
