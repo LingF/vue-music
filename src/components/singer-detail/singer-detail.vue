@@ -1,5 +1,7 @@
 <template>
-  <div class="singer-detail"></div>
+  <transition name="slide">
+    <music-list :songs="songs" :title="title" :bg-image="bgImage"></music-list>
+  </transition>
 </template>
 
 <script>
@@ -8,10 +10,20 @@
   import {getSingerDetail} from 'api/singer'
   import {ERR_OK} from 'api/config'
   import {createSong} from 'common/js/song'
+  import MusicList from 'components/music-list/music-list'
 
   export default {
+    components: {
+      MusicList
+    },
     // getters 最终映射的 computed
     computed: {
+      title() {
+        return this.singer.name
+      },
+      bgImage() {
+        return this.singer.avatar
+      },
       // 等于挂载了一个 singer 属性
       ...mapGetters([
         'singer'
