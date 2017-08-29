@@ -7,6 +7,7 @@
   import {mapGetters} from 'vuex'
   import {getSingerDetail} from 'api/singer'
   import {ERR_OK} from 'api/config'
+  import {createSong} from 'common/js/song'
 
   export default {
     // getters 最终映射的 computed
@@ -16,8 +17,12 @@
         'singer'
       ])
     },
+    data() {
+      return {
+        songs: []
+      }
+    },
     created() {
-      console.log(this.singer)
       // 当前子路由刷新是拿不到数据的
       // 因为我们通过 vuex set singer
       // 而 singer 是在列表页点击后去设置的（SET_SINGER）
@@ -31,8 +36,20 @@
         getSingerDetail(this.singer.id).then((res) => {
           if (res.code === ERR_OK) {
             console.log(res.data.list)
+            this.songs = this._normalizeSongs(res.data.list)
+            console.log(this.songs)
           }
         })
+      },
+      _normalizeSongs(list) {
+        let ret = []
+        list.forEach((item) => {
+          let {musicData} = item
+          if (musicData.songid && musicData.albummid) {
+            ret.push(createSong(musicData))
+          }
+        })
+        return ret
       }
     }
   }
