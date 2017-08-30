@@ -5,7 +5,7 @@
     </div>
     <h1 class="title" v-html="title"></h1>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
-      <div class="filter"></div>
+      <div class="filter" ref="filter"></div>
     </div>
     <div class="bg-layer" ref="layer"></div>
     <scroll @scroll="scroll" :probe-type="probeType" :listen-scroll="listenScroll" :data="songs" class="list" ref="list">
@@ -70,9 +70,22 @@
         // 最大滚动量
         let tranlateY = Math.max(this.minTranslateY, newY)
         let zIndex = 0
+        let scale = 1
+        let blur = 0
         this.$refs.layer.style['transform'] = `translate3d(0, ${tranlateY}px, 0)`
         this.$refs.layer.style['webkitTransform'] = `translate3d(0, ${tranlateY}px, 0)`
+
         // 临界
+        const percent = Math.abs(newY / this.imageHeight)
+        if (newY > 0) {
+          scale = 1 + percent
+          zIndex = 10
+        } else {
+          // 最大值 20 模糊
+          blur = Math.min(20 * percent, 20)
+        }
+        // ios 渐进增强 高斯模糊
+        this.$refs.filter.style['backdrop-filter'] = `blur(${blur}px)`
         if (newY < this.minTranslateY) {
           zIndex = 10
           this.$refs.bgImage.style.paddingTop = 0
@@ -82,6 +95,8 @@
           this.$refs.bgImage.style.height = 0
         }
         this.$refs.bgImage.style.zIndex = zIndex
+        this.$refs.bgImage.style['transform'] = `scale(${scale})`
+        this.$refs.bgImage.style['webkitTransform'] = `scale(${scale})`
       }
     }
   }
