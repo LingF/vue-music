@@ -45,6 +45,7 @@
     },
     methods: {
       _getDetail() {
+        console.log(this.singer)
         getSingerDetail(this.singer.id).then((res) => {
           if (res.code === ERR_OK) {
             console.log(res.data.list)
