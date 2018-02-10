@@ -3,6 +3,7 @@
  */
 
 // 2.
+// 都是一些动作 ***_xxx   ***(set,update...)
 export const SET_SINGER = 'SET_SINGER'
 
 export const SET_PLAYING_STATE = 'SET_PLAYING_STATE'
