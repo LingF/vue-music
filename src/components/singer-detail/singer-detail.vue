@@ -45,7 +45,7 @@
     },
     methods: {
       _getDetail() {
-        getSingerDetail(this.singer.id).then((res) => {
+        getSingerDetail(this.singer.id).then(res => {
           if (res.code === ERR_OK) {
             this.songs = this._normalizeSongs(res.data.list)
           }

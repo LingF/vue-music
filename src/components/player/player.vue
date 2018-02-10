@@ -61,23 +61,36 @@
         </div>
       </div>
     </transition>
+    <audio ref="audio" :src="currentSongUrl"></audio>
   </div>
 </template>
 
 <script>
   import {mapGetters, mapMutations} from 'vuex'
+  import {getSingerExpress} from 'api/singer'
+  import {ERR_OK} from 'api/config'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from 'common/js/dom'
 
   const transform = prefixStyle('transform')
 
   export default {
+    data() {
+      return {
+        currentSongUrl: ''
+      }
+    },
     computed: {
       ...mapGetters([
         'fullScreen',
         'playlist',
         'currentSong'
       ])
+    },
+    watch: {
+      currentSong(newSong) {
+        this._getExpress(newSong.mid)
+      }
     },
     methods: {
       back() {
@@ -140,6 +153,20 @@
           y,
           scale
         }
+      },
+      _getExpress(songmid) {
+        getSingerExpress(songmid).then((res) => {
+          if (res.code === ERR_OK) {
+            let {
+              vkey,
+              filename
+            } = res.data.items[0]
+            this.currentSongUrl = `http://dl.stream.qqmusic.qq.com/${filename}?vkey=${vkey}&guid=2222234862&uin=1074459395&fromtag=66`
+            this.$nextTick(() => {
+              this.$refs.audio.play()
+            })
+          }
+        })
       },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN'

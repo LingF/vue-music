@@ -4,7 +4,7 @@
 import {playMode} from 'common/js/config'
 
 // 1.
-// 设计：保存最原始的数据，可计算而来的不需要（可放入getters）
+// 设计：保存最原始的数据，计算而来的不需要（可放入getters）
 const state = {
   singer: {},
   // 播放器 播放／暂停

@@ -22,7 +22,7 @@ export function getSingerDetail(singerId) {
   const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_v8_singer_track_cp.fcg'
 
   const data = Object.assign({}, commonParams, {
-    ostUin: 0,
+    hostUin: 0,
     needNewCode: 0,
     platform: 'yqq',
     order: 'listen',
@@ -30,6 +30,25 @@ export function getSingerDetail(singerId) {
     num: 80,
     songstatus: 1,
     singermid: singerId
+  })
+
+  return jsonp(url, data, options)
+}
+
+export function getSingerExpress(songmid) {
+  const url = 'https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg'
+
+  const data = Object.assign({}, commonParams, {
+    hostUin: 0,
+    platform: 'yqq',
+    needNewCode: 0,
+    cid: 205361747,
+    uin: 1074459395,
+    guid: 2222234862,
+    songmid,
+    filename: `C400${songmid}.m4a`,
+    callback: '__jp3' // `MusicJsonCallback${backNum}`
+    // jsonpCallback: `MusicJsonCallback${backNum}`,
   })
 
   return jsonp(url, data, options)
