@@ -19,7 +19,7 @@
         <div class="middle">
           <div class="middle-l">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd">
+              <div class="cd" :class="cdCls">
                 <img :src="currentSong.image" alt="" class="image">
               </div>
             </div>
@@ -34,7 +34,8 @@
               <i class="icon-prev"></i>
             </div>
             <div class="icon i-center">
-              <i class="icon-play"></i>
+              <i :class="playIcon"
+                @click="togglePlaying"></i>
             </div>
             <div class="icon i-right">
               <i class="icon-next"></i>
@@ -49,13 +50,18 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
-          <img width="40" height="40" :src="currentSong.image" alt="">
+          <img width="40" height="40"
+            :src="currentSong.image" alt=""
+            :class="cdCls">
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
-        <div class="control"></div>
+        <div class="control">
+          <i :class="miniIcon"
+            @click.stop="togglePlaying"></i>
+        </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
@@ -81,15 +87,31 @@
       }
     },
     computed: {
+      cdCls() {
+        return this.playing ? 'play' : 'play pause'
+      },
+      miniIcon() {
+        return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+      },
+      playIcon() {
+        return this.playing ? 'icon-pause' : 'icon-play'
+      },
       ...mapGetters([
         'fullScreen',
         'playlist',
-        'currentSong'
+        'currentSong',
+        'playing'
       ])
     },
     watch: {
       currentSong(newSong) {
         this._getExpress(newSong.mid)
+      },
+      playing(newPlaying) {
+        const audio = this.$refs.audio
+        this.$nextTick(() => {
+          newPlaying ? audio.play() : audio.pause()
+        })
       }
     },
     methods: {
@@ -139,6 +161,11 @@
         this.$refs.cdWrapper.style.transition = ''
         this.$refs.cdWrapper.style[transform] = ''
       },
+      togglePlaying() {
+        // 并非真正地控制播放器的播放
+        // 监听playing
+        this.setPlayingState(!this.playing)
+      },
       _getPosAndScale() { // 获得位置和比率
         const targetWidth = 40
         const paddingLeft = 40
@@ -160,7 +187,7 @@
             let {
               vkey,
               filename
-            } = res.data.items[0]
+            } = res.data.items[0] || {}
             this.currentSongUrl = `http://dl.stream.qqmusic.qq.com/${filename}?vkey=${vkey}&guid=2222234862&uin=1074459395&fromtag=66`
             this.$nextTick(() => {
               this.$refs.audio.play()
@@ -169,7 +196,8 @@
         })
       },
       ...mapMutations({
-        setFullScreen: 'SET_FULL_SCREEN'
+        setFullScreen: 'SET_FULL_SCREEN',
+        setPlayingState: 'SET_PLAYING_STATE'
       })
     }
   }
