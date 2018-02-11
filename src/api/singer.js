@@ -47,9 +47,9 @@ export function getSingerExpress(songmid) {
     guid: 2222234862,
     songmid,
     filename: `C400${songmid}.m4a`,
-    callback: '__jp3' // `MusicJsonCallback${backNum}`
+    callback: 'MusicJsonCallbackLF' // `MusicJsonCallback${backNum}`
     // jsonpCallback: `MusicJsonCallback${backNum}`,
   })
 
-  return jsonp(url, data, options)
+  return jsonp(url, data, Object.assign(options, {name: 'MusicJsonCallbackLF'}))
 }

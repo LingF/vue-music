@@ -31,14 +31,16 @@
               <i class="icon-sequence"></i>
             </div>
             <div class="icon i-left">
-              <i class="icon-prev"></i>
+              <i class="icon-prev"
+                @click="prev"></i>
             </div>
             <div class="icon i-center">
               <i :class="playIcon"
                 @click="togglePlaying"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon-next"></i>
+              <i class="icon-next"
+                @click="next"></i>
             </div>
             <div class="icon i-right">
               <i class="icon icon-not-favorite"></i>
@@ -67,7 +69,9 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSongUrl"></audio>
+    <audio ref="audio" :src="currentSongUrl"
+      @canplay="ready"
+      @error="error"></audio>
   </div>
 </template>
 
@@ -83,7 +87,8 @@
   export default {
     data() {
       return {
-        currentSongUrl: ''
+        currentSongUrl: '',
+        songReady: false
       }
     },
     computed: {
@@ -100,11 +105,13 @@
         'fullScreen',
         'playlist',
         'currentSong',
-        'playing'
+        'playing',
+        'currentIndex'
       ])
     },
     watch: {
       currentSong(newSong) {
+        console.log(newSong)
         this._getExpress(newSong.mid)
       },
       playing(newPlaying) {
@@ -162,9 +169,40 @@
         this.$refs.cdWrapper.style[transform] = ''
       },
       togglePlaying() {
+        if (!this.songReady) return
         // 并非真正地控制播放器的播放
         // 监听playing
         this.setPlayingState(!this.playing)
+      },
+      next() {
+        if (!this.songReady) return
+        let index = this.currentIndex + 1
+        if (index === this.playlist.length) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+        this.songReady = false
+      },
+      prev() {
+        if (!this.songReady) return
+        let index = this.currentIndex - 1
+        if (index === -1) {
+          index = this.playlist.length - 1
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+        this.songReady = false
+      },
+      ready() {
+        this.songReady = true
+      },
+      error() {
+
       },
       _getPosAndScale() { // 获得位置和比率
         const targetWidth = 40
@@ -197,7 +235,8 @@
       },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
-        setPlayingState: 'SET_PLAYING_STATE'
+        setPlayingState: 'SET_PLAYING_STATE',
+        setCurrentIndex: 'SET_CURRENT_INDEX'
       })
     }
   }
