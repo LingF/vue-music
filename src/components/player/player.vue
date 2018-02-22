@@ -26,6 +26,11 @@
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{format(currentTime)}}</span>
+            <div class="progress-bar-wrapper"></div>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
@@ -74,7 +79,8 @@
     </transition>
     <audio ref="audio" :src="currentSongUrl"
       @canplay="ready"
-      @error="error"></audio>
+      @error="error"
+      @timeupdate="updateTime"></audio>
   </div>
 </template>
 
@@ -91,7 +97,8 @@
     data() {
       return {
         currentSongUrl: '',
-        songReady: false
+        songReady: false,
+        currentTime: 0
       }
     },
     computed: {
@@ -208,7 +215,25 @@
         this.songReady = true
       },
       error() {
-
+        this.songReady = true
+      },
+      updateTime(e) {
+        this.currentTime = e.target.currentTime // 可读写属性
+      },
+      format(interval) {
+        interval = interval | 0
+        const minute = interval / 60 | 0
+        const second = this._pad(interval % 60)
+        return `${minute}:${second}`
+      },
+      // 补位(0)函数
+      _pad(num, n = 2) {
+        let len = num.toString().length
+        while (len < n) {
+          num = '0' + num
+          len++
+        }
+        return num
       },
       _getPosAndScale() { // 获得位置和比率
         const targetWidth = 40
