@@ -35,8 +35,9 @@
             <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left"
+              @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left"
               :class="disableCls">
@@ -84,10 +85,15 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSongUrl"
+    <audio ref="audio"
+      :src="currentSongUrl"
       @canplay="ready"
       @error="error"
-      @timeupdate="updateTime"></audio>
+      @timeupdate="updateTime"
+      @ended="end">
+      <source type="audio/mpeg">
+        Your browser does not support the audio tag.
+    </audio>
   </div>
 </template>
 
@@ -99,6 +105,8 @@
   import {prefixStyle} from 'common/js/dom'
   import ProgressBar from 'base/progress-bar/progress-bar'
   import ProgressCircle from 'base/progress-circle/progress-circle'
+  import {playMode} from 'common/js/config'
+  import {shuffle} from 'common/js/util'
 
   const transform = prefixStyle('transform')
 
@@ -124,6 +132,9 @@
       playIcon() {
         return this.playing ? 'icon-pause' : 'icon-play'
       },
+      iconMode() {
+        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+      },
       disableCls() {
         return this.songReady ? '' : 'disable'
       },
@@ -135,20 +146,24 @@
         'playlist',
         'currentSong',
         'playing',
-        'currentIndex'
+        'currentIndex',
+        'mode',
+        'sequenceList'
       ])
     },
     watch: {
-      currentSong(newSong) {
-        console.log(newSong)
+      currentSong(newSong, oldSong) {
+        console.log(newSong, oldSong)
+        if (newSong.id === oldSong.id) return
         this._getExpress(newSong.mid)
-      },
-      playing(newPlaying) {
-        const audio = this.$refs.audio
-        this.$nextTick(() => {
-          newPlaying ? audio.play() : audio.pause()
-        })
       }
+      // ,
+      // playing(newPlaying) {
+      //   const audio = this.$refs.audio
+      //   this.$nextTick(() => {
+      //     newPlaying ? audio.play() : audio.pause()
+      //   })
+      // }
     },
     methods: {
       back() {
@@ -202,6 +217,22 @@
         // 并非真正地控制播放器的播放
         // 监听playing
         this.setPlayingState(!this.playing)
+
+        // fix watch playing
+        // https://www.imooc.com/article/21499
+        const audio = this.$refs.audio
+        this.playing ? audio.play() : audio.pause()
+      },
+      end() {
+        if (this.mode === playMode.loop) {
+          this.loop()
+        } else {
+          this.next()
+        }
+      },
+      loop() {
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
       },
       next() {
         if (!this.songReady) return
@@ -248,6 +279,24 @@
           this.togglePlaying()
         }
       },
+      changeMode() {
+        const mode = (this.mode + 1) % 3 // 3种状态
+        this.setPlayMode(mode)
+        let list = null
+        if (mode === playMode.random) {
+          list = shuffle(this.sequenceList)
+        } else {
+          list = this.sequenceList
+        }
+        this.resetCurrentIndex(list)
+        this.setPlayList(list)
+      },
+      resetCurrentIndex(list) {
+        let index = list.findIndex(item => {
+          return item.id === this.currentSong.id
+        })
+        this.setCurrentIndex(index)
+      },
       // 补位(0)函数
       _pad(num, n = 2) {
         let len = num.toString().length
@@ -289,7 +338,9 @@
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CURRENT_INDEX'
+        setCurrentIndex: 'SET_CURRENT_INDEX',
+        setPlayMode: 'SET_PLAY_MODE',
+        setPlayList: 'SET_PLAYLIST'
       })
     }
   }
